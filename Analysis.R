@@ -89,6 +89,7 @@ library(stringr)
 # data$peaceyears_cat_min <- str_replace(data$peaceyears_cat_min, '1', 'conflict')
 # data$peaceyears_cat_min <- str_replace(data$peaceyears_cat_min, '2', 'postconflict')
 # data$peaceyears_cat_min <- str_replace(data$peaceyears_cat_min, '3', 'stable')
+data$undernourish_3yr <- str_replace(data$undernourish_3yr, '<', '')
 data$lundernourish_3yr <- str_replace(data$lundernourish_3yr, '<', '')
 data$l2undernourish_3yr <- str_replace(data$l2undernourish_3yr, '<', '')
 data$l3undernourish_3yr <- str_replace(data$l3undernourish_3yr, '<', '')
@@ -97,7 +98,7 @@ data$l3undernourish_3yr <- str_replace(data$l3undernourish_3yr, '<', '')
 # require(foreign)
 # write.csv(data, "tanushree_thesisdata.csv")
 # write.dta(data, "tanushree_thesisdata.dta")
-
+# save(data, file = "data.RData")
 
 
 
@@ -163,17 +164,18 @@ corrdata <- data %>%
     select(aid_ag_pcap_c2018_log, aid_nonag_pcap_c2018_log, ldiet_energysup_3yr, lundernourish_3yr, peaceyears_0to3, peaceyears_4to14, gdp_pcap_c2011_log, sevconflict_pop, fragile_state, droughtfloods_avg_90_09)
 
 corrdata <- cor(corrdata, use ="complete.obs", method = "pearson")
-colnames(corrdata) <- c("aid (agricultural) per capita", "aid (non-agricultural) per capita", "dietary energy supply", "undernourishment", "peace status: conflict", "peace status: post-conflict", "GDP per capita", "severe conflict", "fragile state", "natural disasters")
-rownames(corrdata) <- c("aid (agricultural) per capita", "aid (non-agricultural) per capita", "dietary energy supply", "undernourishment", "peace status: conflict", "peace status: post-conflict", "GDP per capita", "severe conflict", "fragile state", "natural disasters")
+colnames(corrdata) <- c("aid (agricultural) per capita", "aid (non-agricultural) per capita", "dietary energy supply", "undernourishment", "conflict", "post-conflict", "GDP per capita", "severe conflict", "fragile state", "natural disasters")
+rownames(corrdata) <- c("aid (agricultural) per capita", "aid (non-agricultural) per capita", "dietary energy supply", "undernourishment", "conflict", "post-conflict", "GDP per capita", "severe conflict", "fragile state", "natural disasters")
 
 
-# stargazer(corrdata, type = "text", title = "Correlation Matrix", digits=2, out="correlation.html")
+stargazer(corrdata, type = "text", title = "Correlation Matrix", digits=2, out="correlation.html")
 
 library(corrplot)
-corrplot(corrdata, type = "upper",
-         tl.col = "black", tl.srt = 45)
+library(RColorBrewer)
+corr_plot <- corrplot(corrdata, type = "upper",
+         tl.col = "black", tl.srt = 45, tl.cex=1,
+         col = brewer.pal(n = 8, name = "RdYlBu"))
 
-# recordPlot()
 
 # save dataframe
 # save(data,file="data.Rda")
@@ -343,7 +345,7 @@ stargazer(M1, M2, M3, M4, M5, M6,
           dep.var.caption =c("Prevalence of undernourishment"),
           column.labels =c("M1", "M2", "M3", "M4", "M5", "M6"),
           dep.var.labels=c("+1", "+3", "+1", "+3", "+1", "+3"),
-          out="Bivariate - OLS vs FE.html"
+#          out="Bivariate - OLS vs FE.html"
 )
 
 
@@ -357,8 +359,45 @@ stargazer(M7, M8, M9, M10, M11, M12, M13, M14,
           dep.var.caption =c("Prevalence of undernourishment"),
           column.labels =c("M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14"),
           dep.var.labels=c("+1", "+3", "+1", "+3", "+1", "+3", "+1", "+3"),
-          out="Multivariate - Controls and Interaction Models.html"
+#          out="Multivariate - Controls and Interaction Models.html"
           )
+
+
+
+library("sjPlot")
+library("sjmisc")
+
+data(data)
+theme_set(theme_sjplot())
+
+plot_model(M11, 
+           type = "int", 
+           terms = c("aid_ag_pcap_c2018_log", "peaceyears_0to3")
+           ) +
+    labs(title="Predicted Values for the Prevalence of Undernourishment") +
+    xlab("Agricultural Aid Per Capita (log-transformed)") +
+    ylab("Prevalence of Undernourishment") +
+    theme_sjplot() +
+    scale_color_brewer(palette = "Paired", name = "Conflict Phase",
+                       labels = c("No Conflict", "Conflict")) +
+    scale_fill_brewer(palette = "Paired")
+
+ggsave("interaction plot M11.png")
+
+
+plot_model(M13, 
+           type = "int", 
+           terms = c("aid_ag_pcap_c2018_log", "peaceyears_0to3")
+) +
+    labs(title="Predicted Values for the Prevalence of Undernourishment") +
+    xlab("Agricultural Aid Per Capita (log-transformed)") +
+    ylab("Prevalence of Undernourishment") +
+    theme_sjplot() +
+    scale_color_brewer(palette = "Paired", name = "Conflict Phase",
+                       labels = c("Not Post-Conflict", "Post-Conflict")) +
+    scale_fill_brewer(palette = "Paired")
+
+ggsave("interaction plot M13.png")
 
 
 # EXCLUDING CONFLICT COUNTRIES
@@ -366,24 +405,54 @@ stargazer(M7, M8, M9, M10, M11, M12, M13, M14,
 datanoc <- data %>%
     filter(peaceyears_cat!="conflict")
 
-M13 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + factor(country) - 1, data=datanoc)
-M14 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + factor(country) - 1, data=datanoc)
-M15 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
-M16 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
-M17 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
-M18 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
+class(data$peaceyears_4to14)
 
-stargazer(M13, M14, M15, M16, M17, M18,
+M15 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + factor(country) - 1, data=datanoc)
+M16 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + factor(country) - 1, data=datanoc)
+M17 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
+M18 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
+M19 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M20 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M21 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M22 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
+
+stargazer(M15, M16, M17, M18, M19, M20, M21, M22,
           type = "text", 
           title = "Table", 
           digits=2,
           model.numbers=FALSE,
+          no.space = TRUE,
           covariate.labels = c("Ag. aid per capita", "GDP per capita", "Severe conflict", "Natural disasters", "Post-conflict"),
           dep.var.caption =c("Prevalence of undernourishment"),
-          column.labels =c("M13", "M14", "M15", "M16", "M17", "M18"),
-          dep.var.labels=c("+1", "+3", "+1", "+3","+1", "+3"),
-          out="No conflict - Base, Controls and Interaction.html"
+          column.labels =c("M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22"),
+          dep.var.labels=c("+1", "+3", "+1", "+3", "+1", "+3", "+1", "+3"),
+#          out="Multivariate - excluding conflict - Controls and Interaction Models.html"
           )
+
+
+plot_model(M22, 
+           type = "int", 
+           terms = c("aid_ag_pcap_c2018_log", "peaceyears_0to3")
+) +
+    labs(title="Predicted Values for the Prevalence of Undernourishment") +
+    xlab("Agricultural Aid Per Capita (log-transformed)") +
+    ylab("Prevalence of Undernourishment") +
+    theme_sjplot() +
+    scale_color_brewer(palette = "Paired", name = "Conflict Phase",
+                       labels = c("Not Post-Conflict", "Post-Conflict")) +
+    scale_fill_brewer(palette = "Paired")
+
+
+plot_model(M22) +
+    theme_sjplot(base_size = 7, base_family = "")
+
+plot_model(M21, type = "int", terms = c("aid_ag_pcap_c2018_log", "peaceyears_4to14"))
+plot_model(M22, type = "int", terms = c("aid_ag_pcap_c2018_log", "peaceyears_4to14"))
+
+
+anova(M21, M19)
+
+
 
 
 ### ERROR TERM CALCULATION
