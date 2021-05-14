@@ -136,8 +136,8 @@ aidfsplot <- ggplot(data,
     scale_fill_brewer(palette="Set3", 
                        name="Conflict Status",
                        guide="legend") +
-    geom_point(shape=21, stroke=0.01, color="black", alpha = 0.9, size=2.5) +
-    geom_smooth(aes(fill=NA), method=lm, col="black", show.legend = FALSE) +
+    geom_point(shape=21, stroke=0.01, color="black", alpha = 0.9, size=3) +
+#    geom_smooth(aes(fill=NA), method=lm, col="black", show.legend = FALSE) +
     labs(title="Agricultural Aid and the Prevalence of Undernourishment, 2002-2017",
          legend.title="Conflict Status",
          caption = "Undernourishment expressed with 1-year lead time.
@@ -162,9 +162,9 @@ aidfsplot <- ggplot(data,
     )
 
 
-# aidfsplot
+ aidfsplot
 
-# ggsave("aidfsplot.png")
+ ggsave("aidfsplot.png")
 
 # same plot for countries in conflict
 
@@ -183,7 +183,7 @@ aidfsconflictplot <- ggplot(conflict,
                       guide="legend",
                       labels=c("Emerging region: BRIC", "Emerging region: MIKT", "Emerging region: G20", "Developing region", "Least developed region")) +
     geom_point(shape=21, col="black", stroke=0.01, alpha = 0.9, size=3) +
-    geom_smooth(aes(fill=NA), method=lm, col="black", show.legend = FALSE) +
+#    geom_smooth(aes(fill=NA), method=lm, col="black", show.legend = FALSE) +
     labs(title="Agricultural Aid and Undernourishment in Conflict Countries, 2002-2017",
          caption = "Undernourishment expressed as a percentage of the population, with 1-year lead time.
          Agricultural aid expressed as USD per capita, log-transformed.",
@@ -208,9 +208,9 @@ aidfsconflictplot <- ggplot(conflict,
 
 
 
-# aidfsconflictplot
+ aidfsconflictplot
 
-# ggsave("aidfs_conflict.png")
+ ggsave("aidfs_conflict.png")
 
 
 
