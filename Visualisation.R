@@ -1,5 +1,5 @@
 setwd("C:/Users/tanus/Google Drive/MSSc Peace and Conflict Research/Master Thesis/Data")
-load("data.Rdata")
+load("data.rda")
 
 
 
@@ -267,37 +267,54 @@ data_time <- data %>%
         ) %>%
     ungroup()
 
-time <- ggplot(data_time, aes(year)) + 
-    geom_line(aes(y = aid_ave, color = "Agricultural Aid Per Capita ($ USD)")) +
-    geom_line(aes(y = fs_ave, color = "Prevalence of Undernourishment (% of Population)")) + 
-    labs(title="Global Agricultural Aid and the Prevalence of Undernourishment, 2002-2016",
+timefs <- ggplot(data_time, aes(year)) + 
+    geom_line(aes(y = fs_ave), color = "light blue", size=1.5) + 
+    labs(title="Global Prevalence of Undernourishment (Averaged by Year)",
          color="Variable",
          x="Year",
-         y="Value"
+         y="Prevalence of Undernourishment (% of Population)"
          ) +
     scale_x_continuous(breaks = seq(2002, 2016, by = 2)) +
-    scale_y_continuous(breaks = seq(0, 20, by = 4)) +
+    scale_y_continuous(limits = c(10, 20), breaks = seq(10, 20, by = 2)) +
     theme(
         plot.caption = element_text(hjust = 0.5, colour = "dark grey"),
+        plot.title = element_text(hjust = 0.5, colour = "#333333"),
         plot.background = element_rect(fill = "white", color = NA), 
+        axis.title.x = element_text(hjust = 0.5, colour = "#333333"),
+        axis.title.y = element_text(hjust = 0.5, colour = "#333333"),
         panel.background = element_rect(fill = "white", color = NA), 
-        panel.grid=element_line(color="grey"),
-        legend.direction = "vertical",
-        legend.position = "right",
-        legend.box = "horizontal",
-        legend.key=element_blank(),
-        legend.title = element_text(),
-        legend.spacing = unit(0.4, "cm"),
-        legend.box.spacing = unit(1, "cm"),
-        legend.margin = margin(c(0, 10, 10, 0)),
-        legend.text = element_text(margin = margin(r = 20, unit = "pt"))
+        panel.grid=element_line(color="grey")
     )
+
+# timefs
+
+# ggsave("undernourishment over time.png")
+
+timeaid <- ggplot(data_time, aes(year)) + 
+    geom_line(aes(y = aid_ave), colour = "pink", size=1.5) +
+        labs(title="Global Agricultural Aid Received Per Capita (Averaged by Year)",
+         color="Variable",
+         x="Year",
+         y="Agricultural Aid Per Capita ($ USD)"
+    ) +
+    scale_x_continuous(breaks = seq(2002, 2016, by = 2)) +
+    scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 2)) +
+    theme(
+        plot.caption = element_text(hjust = 0.5, colour = "dark grey"),
+        plot.title = element_text(hjust = 0.5, colour = "#333333"),
+        plot.background = element_rect(fill = "white", color = NA), 
+        axis.title.x = element_text(hjust = 0.5, colour = "#333333"),
+        axis.title.y = element_text(hjust = 0.5, colour = "#333333"),
+        panel.background = element_rect(fill = "white", color = NA), 
+        panel.grid=element_line(color="grey")
+    )
+
+# timeaid
+
+# ggsave("ag aid over time.png")
     
 
 
-# time
-
-# ggsave("Variables over time.png")
 
 
 
