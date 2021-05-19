@@ -6,10 +6,6 @@ library(dplyr)
 library(tidyr)
 library(stargazer)
 
-# considerations
-# probably remove countries with fewer than 10 obs or something, e.g. South Sudan
-# there are 131 iso3c codes but 135 countries in dataset, figure out why
-
 
 ### DATA WRANGLING
 
@@ -344,7 +340,7 @@ stargazer(M1, M2, M3, M4, M5, M6,
           dep.var.caption =c("Prevalence of undernourishment"),
           column.labels =c("M1", "M2", "M3", "M4", "M5", "M6"),
           dep.var.labels=c("+1", "+3", "+1", "+3", "+1", "+3"),
-#          out="Bivariate - OLS vs FE.html"
+          out="Bivariate - OLS vs FE.html"
 )
 
 
@@ -358,7 +354,7 @@ stargazer(M7, M8, M9, M10, M11, M12, M13, M14,
           dep.var.caption =c("Prevalence of undernourishment"),
           column.labels =c("M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14"),
           dep.var.labels=c("+1", "+3", "+1", "+3", "+1", "+3", "+1", "+3"),
-          out="Multivariate_v2 - Controls and Interaction Models.html"
+          out="Multivariate - Controls and Interaction Models.html"
           )
 
 
@@ -424,7 +420,7 @@ stargazer(M15, M16, M17, M18, M19, M20, M21, M22,
           dep.var.caption =c("Prevalence of undernourishment"),
           column.labels =c("M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22"),
           dep.var.labels=c("+1", "+3", "+1", "+3", "+1", "+3", "+1", "+3"),
-          out="Multivariate_v2 - excluding conflict - Controls and Interaction Models.html"
+          out="Multivariate - excluding conflict - Controls and Interaction Models.html"
           )
 
 
