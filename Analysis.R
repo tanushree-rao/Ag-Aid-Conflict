@@ -57,7 +57,7 @@ data <- csv %>%
         aid_nonag_pcap_c2018_log = log1p(aid_nonag_pcap + 1),
         gdp_pcap_c2011_log = log1p(gdp_pcap_c2011 + 1),
         bdpop = battle_deaths/pop_total*100,
-        sevconflict = case_when(battle_deaths>=500 ~ 1, TRUE ~ 0),
+        sevconflict = case_when(battle_deaths>=1000 ~ 1, TRUE ~ 0),
         sevconflict_pop = case_when(bdpop>=0.001 ~ 1, TRUE ~ 0),
         peaceyears_cat = case_when(
             between(peaceyears, 0, 3) ~ 1, 
@@ -161,14 +161,14 @@ data$l2undernourish_3yr <- as.numeric(data$l2undernourish_3yr)
 data$l3undernourish_3yr <- as.numeric(data$l3undernourish_3yr)
 
 corrdata <- data %>%
-    select(aid_ag_pcap_c2018_log, aid_nonag_pcap_c2018_log, ldiet_energysup_3yr, lundernourish_3yr, peaceyears_0to3, peaceyears_4to14, gdp_pcap_c2011_log, sevconflict_pop, fragile_state, droughtfloods_avg_90_09)
+    select(aid_ag_pcap_c2018_log, aid_nonag_pcap_c2018_log, ldiet_energysup_3yr, lundernourish_3yr, peaceyears_0to3, peaceyears_4to14, gdp_pcap_c2011_log, sevconflict, fragile_state, droughtfloods_avg_90_09)
 
 corrdata <- cor(corrdata, use ="complete.obs", method = "pearson")
 colnames(corrdata) <- c("aid (agricultural) per capita", "aid (non-agricultural) per capita", "dietary energy supply", "undernourishment", "conflict", "post-conflict", "GDP per capita", "severe conflict", "fragile state", "natural disasters")
 rownames(corrdata) <- c("aid (agricultural) per capita", "aid (non-agricultural) per capita", "dietary energy supply", "undernourishment", "conflict", "post-conflict", "GDP per capita", "severe conflict", "fragile state", "natural disasters")
 
 
-# stargazer(corrdata, type = "text", title = "Correlation Matrix", digits=2, out="correlation.html")
+ stargazer(corrdata, type = "text", title = "Correlation Matrix", digits=2, out="correlation.html")
 
 library(corrplot)
 library(RColorBrewer)
@@ -177,8 +177,6 @@ corr_plot <- corrplot(corrdata, type = "upper",
          col = brewer.pal(n = 8, name = "RdYlBu"))
 
 
-# save dataframe
-# save(data,file="data.Rda")
 
 # density plots...
 
@@ -285,10 +283,10 @@ library(plm)
 
 
 #step 1 : Estimate the FE model
-fe <- plm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + sevconflict_pop + gdp_pcap_c2011_log + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14, data=data,model="within")
+fe <- plm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + sevconflict + gdp_pcap_c2011_log + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14, data=data,model="within")
 summary(fe)
 #step 2 : Estimate the RE model
-re <- pggls(lundernourish_3yr ~ aid_ag_pcap_c2018_log + sevconflict_pop + gdp_pcap_c2011_log + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14, data=data,model="random")
+re <- pggls(lundernourish_3yr ~ aid_ag_pcap_c2018_log + sevconflict + gdp_pcap_c2011_log + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14, data=data,model="random")
 summary(re)
 #step 3 : Run Hausman test
 phtest(fe, re)
@@ -316,22 +314,22 @@ M5 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + factor(year) - 1, data=data
 M6 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + factor(year) - 1, data=data)
 
 # with controls
-M7 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
-M8 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
-# M7a <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log  + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(year) - 1, data=data) 
-# M8a <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log +  + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(year) - 1, data=data)
+M7 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
+M8 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
+# M7a <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log  + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(year) - 1, data=data) 
+# M8a <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log +  + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(year) - 1, data=data)
 
 # stargazer(M7, M8, M7a, M8a, type="text")
 
 # adding conflict/post-conflict controls
-M9 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
-M10 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
+M9 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
+M10 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
 
 # adding interaction terms
-M11 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
-M12 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
-M13 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
-M14 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
+M11 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
+M12 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
+M13 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
+M14 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
 
 
 # tables
@@ -360,7 +358,7 @@ stargazer(M7, M8, M9, M10, M11, M12, M13, M14,
           dep.var.caption =c("Prevalence of undernourishment"),
           column.labels =c("M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14"),
           dep.var.labels=c("+1", "+3", "+1", "+3", "+1", "+3", "+1", "+3"),
-#          out="Multivariate - Controls and Interaction Models.html"
+          out="Multivariate_v2 - Controls and Interaction Models.html"
           )
 
 
@@ -369,7 +367,6 @@ library("sjPlot")
 library("sjmisc")
 
 data(data)
-theme_set(theme_sjplot())
 
 plot_model(M11, 
            type = "int", 
@@ -410,12 +407,12 @@ class(data$peaceyears_4to14)
 
 M15 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + factor(country) - 1, data=datanoc)
 M16 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + factor(country) - 1, data=datanoc)
-M17 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
-M18 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
-M19 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
-M20 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
-M21 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
-M22 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M17 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
+M18 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
+M19 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M20 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M21 <- lm(lundernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M22 <- lm(l3undernourish_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
 
 stargazer(M15, M16, M17, M18, M19, M20, M21, M22,
           type = "text", 
@@ -427,7 +424,7 @@ stargazer(M15, M16, M17, M18, M19, M20, M21, M22,
           dep.var.caption =c("Prevalence of undernourishment"),
           column.labels =c("M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22"),
           dep.var.labels=c("+1", "+3", "+1", "+3", "+1", "+3", "+1", "+3"),
-#          out="Multivariate - excluding conflict - Controls and Interaction Models.html"
+          out="Multivariate_v2 - excluding conflict - Controls and Interaction Models.html"
           )
 
 
@@ -507,20 +504,20 @@ M5_residhist <- ols_plot_resid_hist(M5)
 # dietary energy supply
 
 # with controls
-M7r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
-M8r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
+M7r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
+M8r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
 
 # stargazer(M7, M8, M7a, M8a, type="text")
 
 # adding conflict/post-conflict controls
-M9r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
-M10r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
+M9r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
+M10r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
 
 # adding interaction terms
-M11r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
-M12r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
-M13r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
-M14r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
+M11r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
+M12r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
+M13r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
+M14r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
 
 
 # tables
@@ -573,12 +570,12 @@ ggsave("interaction plot M13 robustness.png")
 
 M15r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + factor(country) - 1, data=datanoc)
 M16r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + factor(country) - 1, data=datanoc)
-M17r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
-M18r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
-M19r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
-M20r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
-M21r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
-M22r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M17r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
+M18r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
+M19r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M20r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M21r <- lm(ldiet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M22r <- lm(l3diet_energysup_3yr ~ aid_ag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_ag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
 
 stargazer(M15r, M16r, M17r, M18r, M19r, M20r, M21r, M22r,
           type = "text", 
@@ -613,20 +610,20 @@ ggsave("interaction plot M22 robustness.png")
 ## robustness with aid
 
 # with controls
-M7rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
-M8rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
+M7rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
+M8rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=data)
 
 # stargazer(M7, M8, M7a, M8a, type="text")
 
 # adding conflict/post-conflict controls
-M9rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
-M10rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
+M9rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
+M10rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + factor(country) - 1, data=data)
 
 # adding interaction terms
-M11rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
-M12rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
-M13rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
-M14rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
+M11rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
+M12rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_0to3 + factor(country) - 1, data=data)
+M13rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
+M14rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_0to3 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=data)
 
 
 # tables
@@ -680,12 +677,12 @@ ggsave("interaction plot M13 - robustness aid.png")
 
 M15rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + factor(country) - 1, data=datanoc)
 M16rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + factor(country) - 1, data=datanoc)
-M17rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
-M18rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
-M19rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
-M20rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
-M21rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
-M22rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict_pop + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M17rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
+M18rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + factor(country) - 1, data=datanoc)
+M19rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M20rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M21rr <- lm(lundernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
+M22rr <- lm(l3undernourish_3yr ~ aid_nonag_pcap_c2018_log + gdp_pcap_c2011_log + sevconflict + droughtfloods_avg_90_09 + peaceyears_4to14 + aid_nonag_pcap_c2018_log*peaceyears_4to14 + factor(country) - 1, data=datanoc)
 
 stargazer(M15rr, M16rr, M17rr, M18rr, M19rr, M20rr, M21rr, M22rr,
           type = "text", 
