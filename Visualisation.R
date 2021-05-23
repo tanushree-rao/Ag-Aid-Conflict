@@ -269,7 +269,7 @@ data_time <- data %>%
 
 timefs <- ggplot(data_time, aes(year)) + 
     geom_line(aes(y = fs_ave), color = "light blue", size=1.5) + 
-    labs(title="Global Prevalence of Undernourishment (Averaged by Year)",
+    labs(title="Undernourishment in Agricultural Aid-Receiving Countries (Averaged by Year)",
          color="Variable",
          x="Year",
          y="Prevalence of Undernourishment (% of Population)"
@@ -286,9 +286,10 @@ timefs <- ggplot(data_time, aes(year)) +
         panel.grid=element_line(color="grey")
     )
 
-# timefs
+timefs
 
 # ggsave("undernourishment over time.png")
+
 
 timeaid <- ggplot(data_time, aes(year)) + 
     geom_line(aes(y = aid_ave), colour = "pink", size=1.5) +
@@ -309,7 +310,7 @@ timeaid <- ggplot(data_time, aes(year)) +
         panel.grid=element_line(color="grey")
     )
 
-# timeaid
+timeaid
 
 # ggsave("ag aid over time.png")
     
