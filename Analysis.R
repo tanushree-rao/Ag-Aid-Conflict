@@ -1,5 +1,5 @@
 rm(list=ls())
-setwd("C:/Users/tanus/Google Drive/MSSc Peace and Conflict Research/Master Thesis/Data")
+setwd("~/Master-Thesis")
 csv <- read.csv("thesis_dataset_final.csv")
 
 library(dplyr)
@@ -76,7 +76,7 @@ data <- csv %>%
     ) %>%
     # filter out na in country name
     drop_na(country)
-    # consider revisiting country codes that don't correspond with a country name
+
 
 library(stringr)
 # data$peaceyears_cat <- str_replace(data$peaceyears_cat, '1', 'conflict')
@@ -85,6 +85,8 @@ library(stringr)
 # data$peaceyears_cat_min <- str_replace(data$peaceyears_cat_min, '1', 'conflict')
 # data$peaceyears_cat_min <- str_replace(data$peaceyears_cat_min, '2', 'postconflict')
 # data$peaceyears_cat_min <- str_replace(data$peaceyears_cat_min, '3', 'stable')
+
+# converting 'less than' values to actual values - clarify in research output
 data$undernourish_3yr <- str_replace(data$undernourish_3yr, '<', '')
 data$lundernourish_3yr <- str_replace(data$lundernourish_3yr, '<', '')
 data$l2undernourish_3yr <- str_replace(data$l2undernourish_3yr, '<', '')
@@ -127,17 +129,14 @@ cpeaceyears_15plus <- data %>%
 
 # ### SUMMARY STATS
 # 
-# unique(data$country) #135
+# unique(data$country)
 # 
 # data %>%
 #     count(peaceyears_0to3, peaceyears_4to14, peaceyears_15plus)
-#     # 870, 327, 525 obs respectively
 # 
-# unique(peaceyears_0to3$country) #58 - countries that experienced active conflict / less than 2 years postconflict during the time period
-# unique(peaceyears_4to14$country) #22 - countries that experienced 3-15 peace years during the time
-# unique(peaceyears_15plus$country) #34 - countries that experienced 16+ peace years for the entirety of the period
-# # NA: 24 countries (no peace years data)
-# # WHY ARE THERE DIFFERENT NUMBERS OF COUNTRIES EVERY TIME?!!! E.G. when moving the 'drop_na' function to near the beginning
+# unique(peaceyears_0to3$country) - # countries that experienced active conflict / less than 2 years postconflict during the time period
+# unique(peaceyears_4to14$country) - # countries that experienced 3-15 peace years during the time
+# unique(peaceyears_15plus$country) - # countries that experienced 16+ peace years for the entirety of the period
 # 
 # summary(data)
 # summary(data$lundernourish_3yr)
@@ -264,6 +263,9 @@ ggplot(data) +
     ylab("Values")
 
 # ggsave("Visualisations/boxplot_aid.png")
+
+
+
 
 ### HAUSMAN TEST (OLS/FE)
 
@@ -463,13 +465,13 @@ sqrt(mean(M10$residuals^2))
 
 library(olsrr)
 
-# detects violation of normality assumption - unsure what these mean, though
+# detects violation of normality assumption
 ols_plot_resid_qq(M9) # qq plot
-ols_test_normality(M9) # P VALUE IS 0, THAT PROBABLY SUCKS + SOME STATS ARE HUGE
+ols_test_normality(M9)
 ols_test_correlation(M9)
 
 ols_plot_resid_qq(M10) # qq plot
-ols_test_normality(M10) # P VALUE IS 0, THAT PROBABLY SUCKS + SOME STATS ARE HUGE
+ols_test_normality(M10)
 ols_test_correlation(M10)
 
 
@@ -482,11 +484,11 @@ ols_test_correlation(M10)
 # The residuals form an approximate horizontal band around the 0 line indicating homogeneity of error variance.
 # No one residual is visibly away from the random pattern of the residuals indicating that there are no outliers.
 
-M9_residplot <- ols_plot_resid_fit(M9) # there are outliers. what to do?
-M9_residhist <- ols_plot_resid_hist(M9) # looks good!
+M9_residplot <- ols_plot_resid_fit(M9)
+M9_residhist <- ols_plot_resid_hist(M9)
 
-M10_residplot <- ols_plot_resid_fit(M10) # there are outliers. what to do?
-M10_residhist <- ols_plot_resid_hist(M10) # looks good!
+M10_residplot <- ols_plot_resid_fit(M10)
+M10_residhist <- ols_plot_resid_hist(M10)
 
 M3_residplot <- ols_plot_resid_fit(M3)
 M3_residhist <- ols_plot_resid_hist(M3)
